@@ -5,7 +5,7 @@ import {createFileRoute, useNavigate} from "@tanstack/react-router";
 import {useForm} from "@tanstack/react-form";
 import {api} from "@/lib/api";
 
-export const Route = createFileRoute("/create-product")({
+export const Route = createFileRoute("/_authenticated/create-product")({
   component: CreateProduct,
 });
 

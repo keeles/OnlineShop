@@ -1,15 +1,17 @@
 import {Hono} from "hono";
 import {zValidator} from "@hono/zod-validator";
 import z from "zod";
+import {getUser} from "../kinde";
 
 const productSchema = z.object({
   id: z.number().int().positive().min(1),
   title: z.string().min(3).max(40),
   description: z.string().min(3).max(350),
   price: z.number().positive(),
+  userId: z.string(),
 });
 
-const createProductSchema = productSchema.omit({id: true});
+const createProductSchema = productSchema.omit({id: true, userId: true});
 
 type Product = z.infer<typeof productSchema>;
 
@@ -17,9 +19,10 @@ export const productsRoute = new Hono()
   .get("/", async (c) => {
     return c.json({products: fakeProducts});
   })
-  .post("/", zValidator("json", createProductSchema), async (c) => {
+  .post("/", getUser, zValidator("json", createProductSchema), async (c) => {
     const product = c.req.valid("json");
-    fakeProducts.push({...product, id: fakeProducts.length + 1});
+    const user = c.var.user;
+    fakeProducts.push({...product, id: fakeProducts.length + 1, userId: user.id});
     return c.json(product);
   })
   .get("/:id{[0-9]+}", (c) => {
@@ -28,8 +31,11 @@ export const productsRoute = new Hono()
     if (!product) return c.notFound();
     return c.json(product);
   })
-  .delete("/:id{[0-9]+}", (c) => {
+  .delete("/:id{[0-9]+}", getUser, (c) => {
     const id = Number.parseInt(c.req.param("id"));
+    const user = c.var.user;
+    const product = fakeProducts.find((product) => product.id === id);
+    if (user.id !== product?.userId) return c.json({error: "Unauthenticated"});
     const index = fakeProducts.findIndex((product) => product.id === id);
     if (!index) return c.notFound();
     const deleted = fakeProducts.splice(index, 1)[0];
@@ -43,6 +49,7 @@ const fakeProducts: Product[] = [
     description:
       "A snug and warm crochet beanie made with thick wool. Perfect for cold weather and stylish enough for any occasion.",
     price: 25,
+    userId: "",
   },
   {
     id: 2,
@@ -50,6 +57,7 @@ const fakeProducts: Product[] = [
     description:
       "This crochet hat features a cute fluffy pom-pom on top and a soft, stretchy design. A playful addition to your winter wardrobe.",
     price: 22,
+    userId: "",
   },
   {
     id: 3,
@@ -57,6 +65,7 @@ const fakeProducts: Product[] = [
     description:
       "A laid-back slouchy crochet hat with intricate patterns and a relaxed fit. Great for adding a bohemian touch to your outfit.",
     price: 30,
+    userId: "",
   },
   {
     id: 4,
@@ -64,6 +73,7 @@ const fakeProducts: Product[] = [
     description:
       "Made with chunky yarn, this crochet cap provides maximum warmth without compromising style. A classic winter essential.",
     price: 28,
+    userId: "",
   },
   {
     id: 5,
@@ -71,6 +81,7 @@ const fakeProducts: Product[] = [
     description:
       "Lightweight and breathable, this crochet fedora is perfect for sunny days. The perfect accessory for summer outings.",
     price: 18,
+    userId: "",
   },
   {
     id: 6,
@@ -78,6 +89,7 @@ const fakeProducts: Product[] = [
     description:
       "This beanie features a beautiful snowflake design, crocheted with soft acrylic yarn for a comfortable fit and extra warmth.",
     price: 27,
+    userId: "",
   },
   {
     id: 7,
@@ -85,6 +97,7 @@ const fakeProducts: Product[] = [
     description:
       "Inspired by vintage styles, this cloche hat is crocheted with delicate detail and a soft, structured design. Ideal for dressing up or down.",
     price: 33,
+    userId: "",
   },
   {
     id: 8,
@@ -92,6 +105,7 @@ const fakeProducts: Product[] = [
     description:
       "A lightweight crochet visor hat with a striped pattern. Perfect for days at the beach or outdoor adventures.",
     price: 19,
+    userId: "",
   },
   {
     id: 9,
@@ -99,6 +113,7 @@ const fakeProducts: Product[] = [
     description:
       "This colorful crochet beanie features a patchwork design with a mix of vibrant yarns. A fun, cozy, and unique accessory.",
     price: 26,
+    userId: "",
   },
   {
     id: 10,
@@ -106,5 +121,6 @@ const fakeProducts: Product[] = [
     description:
       "Combining the best of a headband and a beanie, this lavender crochet hat is perfect for keeping your ears warm in style.",
     price: 21,
+    userId: "",
   },
 ];
