@@ -1,126 +1,53 @@
 import {Hono} from "hono";
 import {zValidator} from "@hono/zod-validator";
-import z from "zod";
 import {getUser} from "../kinde";
-
-const productSchema = z.object({
-  id: z.number().int().positive().min(1),
-  title: z.string().min(3).max(40),
-  description: z.string().min(3).max(350),
-  price: z.number().positive(),
-  userId: z.string(),
-});
-
-const createProductSchema = productSchema.omit({id: true, userId: true});
-
-type Product = z.infer<typeof productSchema>;
+import {db} from "../db";
+import {products as productsTable, insertProductSchema} from "../db/schema/products";
+import {and, desc, eq} from "drizzle-orm";
+import {createProductSchema} from "../sharedTypes";
 
 export const productsRoute = new Hono()
   .get("/", async (c) => {
-    return c.json({products: fakeProducts});
+    const products = await db.select().from(productsTable).orderBy(desc(productsTable.createdAt));
+    return c.json({products});
   })
   .post("/", getUser, zValidator("json", createProductSchema), async (c) => {
     const product = c.req.valid("json");
     const user = c.var.user;
-    fakeProducts.push({...product, id: fakeProducts.length + 1, userId: user.id});
-    return c.json(product);
+    const validatedProduct = insertProductSchema.parse({
+      ...product,
+      userId: user.id,
+    });
+    const newProduct = await db
+      .insert(productsTable)
+      .values(validatedProduct)
+      .returning()
+      .then((res) => res[0]);
+    return c.json(newProduct);
   })
-  .get("/:id{[0-9]+}", (c) => {
+  .get("/:id{[0-9]+}", async (c) => {
     const id = Number.parseInt(c.req.param("id"));
-    const product = fakeProducts.find((product) => product.id === id);
+    const product = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, id))
+      .then((res) => res[0]);
     if (!product) return c.notFound();
     return c.json(product);
   })
-  .delete("/:id{[0-9]+}", getUser, (c) => {
+  .get("/user-products", getUser, async (c) => {
+    const user = c.var.user;
+    const products = await db.select().from(productsTable).where(eq(productsTable.userId, user.id));
+    return c.json(products);
+  })
+  .delete("/:id{[0-9]+}", getUser, async (c) => {
     const id = Number.parseInt(c.req.param("id"));
     const user = c.var.user;
-    const product = fakeProducts.find((product) => product.id === id);
-    if (user.id !== product?.userId) return c.json({error: "Unauthenticated"});
-    const index = fakeProducts.findIndex((product) => product.id === id);
-    if (!index) return c.notFound();
-    const deleted = fakeProducts.splice(index, 1)[0];
-    return c.json(deleted);
+    const product = await db
+      .delete(productsTable)
+      .where(and(eq(productsTable.id, id), eq(productsTable.userId, user.id)))
+      .returning({id: productsTable.id})
+      .then((res) => res[0]);
+    if (!product) return c.notFound();
+    return c.json(product);
   });
-
-const fakeProducts: Product[] = [
-  {
-    id: 1,
-    title: "Cozy Winter Beanie",
-    description:
-      "A snug and warm crochet beanie made with thick wool. Perfect for cold weather and stylish enough for any occasion.",
-    price: 25,
-    userId: "",
-  },
-  {
-    id: 2,
-    title: "Fluffy Pom-Pom Hat",
-    description:
-      "This crochet hat features a cute fluffy pom-pom on top and a soft, stretchy design. A playful addition to your winter wardrobe.",
-    price: 22,
-    userId: "",
-  },
-  {
-    id: 3,
-    title: "Boho Chic Slouchy Hat",
-    description:
-      "A laid-back slouchy crochet hat with intricate patterns and a relaxed fit. Great for adding a bohemian touch to your outfit.",
-    price: 30,
-    userId: "",
-  },
-  {
-    id: 4,
-    title: "Classic Chunky Knit Cap",
-    description:
-      "Made with chunky yarn, this crochet cap provides maximum warmth without compromising style. A classic winter essential.",
-    price: 28,
-    userId: "",
-  },
-  {
-    id: 5,
-    title: "Sunshine Straw Fedora",
-    description:
-      "Lightweight and breathable, this crochet fedora is perfect for sunny days. The perfect accessory for summer outings.",
-    price: 18,
-    userId: "",
-  },
-  {
-    id: 6,
-    title: "Snowflake Winter Beanie",
-    description:
-      "This beanie features a beautiful snowflake design, crocheted with soft acrylic yarn for a comfortable fit and extra warmth.",
-    price: 27,
-    userId: "",
-  },
-  {
-    id: 7,
-    title: "Vintage Crochet Cloche Hat",
-    description:
-      "Inspired by vintage styles, this cloche hat is crocheted with delicate detail and a soft, structured design. Ideal for dressing up or down.",
-    price: 33,
-    userId: "",
-  },
-  {
-    id: 8,
-    title: "Striped Summer Visor",
-    description:
-      "A lightweight crochet visor hat with a striped pattern. Perfect for days at the beach or outdoor adventures.",
-    price: 19,
-    userId: "",
-  },
-  {
-    id: 9,
-    title: "Patchwork Crochet Beanie",
-    description:
-      "This colorful crochet beanie features a patchwork design with a mix of vibrant yarns. A fun, cozy, and unique accessory.",
-    price: 26,
-    userId: "",
-  },
-  {
-    id: 10,
-    title: "Lavender Crochet Headband Hat",
-    description:
-      "Combining the best of a headband and a beanie, this lavender crochet hat is perfect for keeping your ears warm in style.",
-    price: 21,
-    userId: "",
-  },
-];

@@ -18,3 +18,16 @@ export const userQuery = queryOptions({
   queryFn: getCurrentUser,
   staleTime: Infinity,
 });
+
+async function getUserProducts() {
+  const res = await api.products["user-products"].$get();
+  if (!res.ok) throw new Error("Server Error");
+  const data = await res.json();
+  return data;
+}
+
+export const userProductQuery = queryOptions({
+  queryKey: ["get-user-products"],
+  queryFn: getUserProducts,
+  staleTime: Infinity,
+});

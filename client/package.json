@@ -12,10 +12,12 @@
   "dependencies": {
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@tabler/icons-react": "^3.24.0",
     "@tanstack/react-form": "^0.39.0",
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-router": "^1.85.0",
     "@tanstack/router-vite-plugin": "^1.84.4",
+    "@tanstack/zod-form-adapter": "^0.39.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.12.0",

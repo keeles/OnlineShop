@@ -1,9 +1,9 @@
 import {Hono} from "hono";
-import {zValidator} from "@hono/zod-validator";
-import z from "zod";
 import {kindeClient} from "../kinde";
 import {sessionManager} from "../kinde";
 import {getUser} from "../kinde";
+import {db} from "../db";
+import {users as usersTable} from "../db/schema/users";
 
 export const authRoute = new Hono()
   .get("/login", async (c) => {
@@ -17,6 +17,16 @@ export const authRoute = new Hono()
   .get("/callback", async (c) => {
     const url = new URL(c.req.url);
     await kindeClient.handleRedirectToApp(sessionManager(c), url);
+    const user = await kindeClient.getUser(sessionManager(c));
+    if (user) {
+      try {
+        await db.insert(usersTable).values({
+          ...user,
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }
     return c.redirect("/");
   })
   .get("/logout", async (c) => {

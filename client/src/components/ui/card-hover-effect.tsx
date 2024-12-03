@@ -10,7 +10,7 @@ export const HoverEffect = ({
     id: number;
     title: string;
     description: string;
-    price: number;
+    price: string;
   }[];
   className?: string;
 }) => {
@@ -21,7 +21,7 @@ export const HoverEffect = ({
       {items.map((item, idx) => (
         <a
           href={`/api/product/${item?.id}`}
-          key={item?.price}
+          key={item?.id}
           className="relative group  block p-2 h-full w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
           onMouseLeave={() => setHoveredIndex(null)}
@@ -46,6 +46,7 @@ export const HoverEffect = ({
           <Card>
             <CardTitle>{item.title}</CardTitle>
             <CardDescription>{item.description}</CardDescription>
+            <CardDescription>${item.price}</CardDescription>
           </Card>
         </a>
       ))}

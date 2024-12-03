@@ -4,6 +4,8 @@ import {Label} from "@/components/ui/label";
 import {createFileRoute, useNavigate} from "@tanstack/react-router";
 import {useForm} from "@tanstack/react-form";
 import {api} from "@/lib/api";
+import {zodValidator} from "@tanstack/zod-form-adapter";
+import {createProductSchema} from "@server/sharedTypes";
 
 export const Route = createFileRoute("/_authenticated/create-product")({
   component: CreateProduct,
@@ -12,13 +14,13 @@ export const Route = createFileRoute("/_authenticated/create-product")({
 function CreateProduct() {
   const navigate = useNavigate();
   const form = useForm({
+    validatorAdapter: zodValidator(),
     defaultValues: {
       title: "",
       description: "",
-      price: 0,
+      price: "",
     },
     onSubmit: async ({value}) => {
-      await new Promise((r) => setTimeout(r, 2000));
       const res = await api.products.$post({json: value});
       if (!res.ok) throw new Error("Server Error");
       navigate({to: "/"});
@@ -26,7 +28,7 @@ function CreateProduct() {
   });
 
   return (
-    <div className="p-2 max-w-md flex flex-col items-center justify-center">
+    <div className="p-2 max-w-md gap-y-4 flex flex-col items-center justify-center">
       <h2>Add New Product</h2>
       <form
         className="max-w-md margin-auto"
@@ -39,8 +41,11 @@ function CreateProduct() {
       >
         <form.Field
           name="title"
+          validators={{
+            onChange: createProductSchema.shape.title,
+          }}
           children={(field) => (
-            <>
+            <div>
               <Label htmlFor={field.name}>Title</Label>
               <Input
                 name={field.name}
@@ -49,11 +54,14 @@ function CreateProduct() {
                 onChange={(e) => field.handleChange(e.target.value)}
               />
               {field.state.meta.errors ? <em role="alert">{field.state.meta.errors.join(", ")}</em> : null}
-            </>
+            </div>
           )}
         />
         <form.Field
           name="description"
+          validators={{
+            onChange: createProductSchema.shape.description,
+          }}
           children={(field) => (
             <>
               <Label htmlFor={field.name}>Description</Label>
@@ -69,6 +77,9 @@ function CreateProduct() {
         />
         <form.Field
           name="price"
+          validators={{
+            onChange: createProductSchema.shape.price,
+          }}
           children={(field) => (
             <>
               <Label htmlFor={field.name}>Price</Label>
@@ -77,7 +88,7 @@ function CreateProduct() {
                 value={field.state.value}
                 step="0.01"
                 onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(Number(e.target.value))}
+                onChange={(e) => field.handleChange(e.target.value)}
               />
               {field.state.meta.errors ? <em role="alert">{field.state.meta.errors.join(", ")}</em> : null}
             </>

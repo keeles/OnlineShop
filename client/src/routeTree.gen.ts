@@ -11,19 +11,12 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as AboutImport } from './routes/about'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCreateProductImport } from './routes/_authenticated/create-product'
 
 // Create/Update Routes
-
-const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const AuthenticatedRoute = AuthenticatedImport.update({
   id: '/_authenticated',
@@ -68,13 +61,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImport
       parentRoute: typeof rootRoute
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
-      parentRoute: typeof rootRoute
-    }
     '/_authenticated/create-product': {
       id: '/_authenticated/create-product'
       path: '/create-product'
@@ -111,7 +97,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
-  '/about': typeof AboutRoute
   '/create-product': typeof AuthenticatedCreateProductRoute
   '/profile': typeof AuthenticatedProfileRoute
 }
@@ -119,7 +104,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
-  '/about': typeof AboutRoute
   '/create-product': typeof AuthenticatedCreateProductRoute
   '/profile': typeof AuthenticatedProfileRoute
 }
@@ -128,21 +112,19 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/about': typeof AboutRoute
   '/_authenticated/create-product': typeof AuthenticatedCreateProductRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/about' | '/create-product' | '/profile'
+  fullPaths: '/' | '' | '/create-product' | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/about' | '/create-product' | '/profile'
+  to: '/' | '' | '/create-product' | '/profile'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/about'
     | '/_authenticated/create-product'
     | '/_authenticated/profile'
   fileRoutesById: FileRoutesById
@@ -151,13 +133,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AboutRoute: typeof AboutRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  AboutRoute: AboutRoute,
 }
 
 export const routeTree = rootRoute
@@ -171,8 +151,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/_authenticated",
-        "/about"
+        "/_authenticated"
       ]
     },
     "/": {
@@ -184,9 +163,6 @@ export const routeTree = rootRoute
         "/_authenticated/create-product",
         "/_authenticated/profile"
       ]
-    },
-    "/about": {
-      "filePath": "about.tsx"
     },
     "/_authenticated/create-product": {
       "filePath": "_authenticated/create-product.tsx",

@@ -11,25 +11,22 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function Root() {
   return (
-    <>
+    <div className="flex flex-col items-center justify-center">
       <NavBar />
       <hr />
       <Outlet />
-    </>
+    </div>
   );
 }
 
 function NavBar() {
   return (
-    <div className="p-2 flex gap-2 max-w-md justify-center">
+    <div className="p-2 flex justify-between gap-8 max-w-3xl items-center">
       <Link to="/" className="[&.active]:font-bold">
-        Home
+        Shop
       </Link>{" "}
-      <Link to="/about" className="[&.active]:font-bold">
-        About
-      </Link>
       <Link to="/create-product" className="[&.active]:font-bold">
-        Create
+        List
       </Link>
       <Link to="/profile" className="[&.active]:font-bold">
         Profile
