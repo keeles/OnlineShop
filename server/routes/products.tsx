@@ -1,10 +1,21 @@
 import {Hono} from "hono";
 import {zValidator} from "@hono/zod-validator";
+import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
+import {S3Client, PutObjectCommand} from "@aws-sdk/client-s3";
 import {getUser} from "../kinde";
 import {db} from "../db";
 import {products as productsTable, insertProductSchema} from "../db/schema/products";
 import {and, desc, eq} from "drizzle-orm";
-import {createProductSchema} from "../sharedTypes";
+import {createProductSchema, serverCreateProductSchema} from "../sharedTypes";
+import {productImages} from "../db/schema/product-images";
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY!,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY!,
+  },
+  region: process.env.BUCKET_REGION!,
+});
 
 export const productsRoute = new Hono()
   .get("/", async (c) => {
@@ -18,11 +29,14 @@ export const productsRoute = new Hono()
       ...product,
       userId: user.id,
     });
+    if (!validatedProduct) return c.json({message: "Invalid"}, 400);
     const newProduct = await db
       .insert(productsTable)
       .values(validatedProduct)
       .returning()
       .then((res) => res[0]);
+    //TODO: wtf do I do with the images
+    // const imageUrls = await uploadImages(files, newProduct.id);
     return c.json(newProduct);
   })
   .get("/:id{[0-9]+}", async (c) => {

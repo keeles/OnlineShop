@@ -21,9 +21,9 @@ function Profile() {
 
   if (user.isPending) return <h1>Loading...</h1>;
   if (user.error) return <h1>Not Logged in</h1>;
+
   return (
     <div className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg">
-      {/* Profile Header */}
       <div className="flex items-center space-x-6">
         <img
           src={user.data.picture || "/default-avatar.png"}
@@ -43,25 +43,21 @@ function Profile() {
 
       {userProducts.data ? <HoverEffect items={userProducts.data} /> : <h1>No Listings</h1>}
 
-      {/* Logout Button */}
       <div className="mt-6 flex justify-center">
         <Button className="">
           <a href="/api/logout">Logout</a>
         </Button>
       </div>
-      {/* Edit Profile Form */}
       {isModalOpen && (
         <div className="mt-6 p-4 bg-background rounded-lg shadow-inner border border-foreground">
           <h2 className="text-2xl font-semibold mb-4">Edit Profile</h2>
-          <form className="space-y-4">
-            {/* Change Username */}
+          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             <div>
               <Label htmlFor="username" className="">
                 Username
               </Label>
               <Input id="username" type="text" defaultValue="username" className="" />
             </div>
-            {/* Change Profile Picture */}
             <div>
               <Label htmlFor="picture" className="">
                 Profile Picture
