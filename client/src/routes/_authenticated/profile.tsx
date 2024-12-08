@@ -6,6 +6,7 @@ import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {useState} from "react";
 import {HoverEffect} from "@/components/ui/card-hover-effect";
+import {Login} from "../_authenticated";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: Profile,
@@ -20,7 +21,7 @@ function Profile() {
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   if (user.isPending) return <h1>Loading...</h1>;
-  if (user.error) return <h1>Not Logged in</h1>;
+  if (user.error) return <Login />;
 
   return (
     <div className="max-w-4xl mx-auto p-6 rounded-lg shadow-lg">

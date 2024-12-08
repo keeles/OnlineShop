@@ -31,3 +31,15 @@ export const userProductQuery = queryOptions({
   queryFn: getUserProducts,
   staleTime: Infinity,
 });
+
+export async function getSignedUrl(fileName: string, fileType: string, fileSize: number) {
+  const res = await api.products["get-presigned-url"].$post({json: {fileName, fileSize, fileType}});
+  const data = await res.json();
+  return data;
+}
+
+// export const getUrlQuery = queryOptions({
+//   queryKey: ["get-signed-url"],
+//   queryFn: getSignedUrl,
+//   staleTime: Infinity
+// })

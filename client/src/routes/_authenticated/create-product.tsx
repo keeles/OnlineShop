@@ -2,7 +2,7 @@ import {createFileRoute, useNavigate} from "@tanstack/react-router";
 import Dropzone from "@/components/custom/drop-zone";
 import {useForm} from "@tanstack/react-form";
 import {zodValidator} from "@tanstack/zod-form-adapter";
-import {api} from "@/lib/api";
+import {api, getSignedUrl} from "@/lib/api";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {createProductSchema} from "@server/sharedTypes";
@@ -25,10 +25,23 @@ function CreateProduct() {
       price: "",
     },
     onSubmit: async ({value}) => {
-      const valid = createProductSchema.parse(value);
-      const res = await api.products.$post({json: valid});
-      if (!res.ok) throw new Error("Server Error");
-      navigate({to: "/"});
+      try {
+        const valid = createProductSchema.parse(value);
+        const fileData = await Promise.all(
+          files.map(async (file) => {
+            const postData = {fileName: file.name, fileType: file.type, fileSize: file.size};
+            const preSigned = await getSignedUrl(postData.fileName, postData.fileType, postData.fileSize);
+            await uploadToS3(file, preSigned.url);
+            return {fileName: file.name, url: preSigned.url};
+          })
+        );
+        const res = await api.products.$post({json: {...valid, images: fileData}});
+        if (!res.ok) throw new Error("Server Error");
+        navigate({to: "/"});
+      } catch (err) {
+        console.log(err);
+        alert(err);
+      }
     },
   });
 
@@ -116,4 +129,17 @@ function CreateProduct() {
       </div>
     </div>
   );
+}
+
+async function uploadToS3(file: File, presignedUrl: string) {
+  const uploadResponse = await fetch(presignedUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type,
+    },
+    body: file,
+  });
+
+  if (!uploadResponse.ok) throw new Error("Server Error");
+  return presignedUrl;
 }

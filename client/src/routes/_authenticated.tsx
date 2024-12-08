@@ -1,11 +1,16 @@
+import {Button} from "@/components/ui/button";
 import {userQuery} from "@/lib/api";
 import {createFileRoute, Outlet} from "@tanstack/react-router";
 
-const Login = () => {
+export const Login = () => {
   return (
     <>
-      <div>Not logged in</div>
-      <a href="/api/login">Login</a>
+      <div>
+        <h3>Not logged in</h3>
+        <a href="/api/login">
+          <Button>Login</Button>
+        </a>
+      </div>
     </>
   );
 };
