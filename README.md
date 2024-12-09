@@ -6,19 +6,19 @@ I also wanted to play around with the Aceternity components, was planning to use
 
 ## env variables
 
-    - Please check the required variables and their names in the .env.example file
+Please check the required variables and their names in the .env.example file
 
 ### Kinde Auth
 
-    - You will need to connect a kinde account for auth, I set mine up using the NodeJS template.
+You will need to connect a kinde account for auth, I set mine up using the NodeJS template.
 
 ### Database
 
-    - I am using neon to hosted my postgres database with drizzle orm.
+I am using neon to hosted my postgres database with drizzle orm.
 
 ### AWS
 
-    - I am using an s3 bucket to store product images. The bucket must be accessible to read, put and delete items. I am using my server to generate presigned url's that the client-side react code can use to put the images files in the bucket directly, then storing the key in the database to render the image with a new url before being sent to the client to view in any get requests.
+I am using an s3 bucket to store product images. The bucket must be accessible to read, put and delete items. I am using my server to generate presigned url's that the client-side react code can use to put the images files in the bucket directly, then storing the key in the database to render the image with a new url before being sent to the client to view in any get requests.
 
 ## To install dependencies:
 
