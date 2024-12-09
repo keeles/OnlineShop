@@ -23,8 +23,10 @@ export const authRoute = new Hono()
         await db.insert(usersTable).values({
           ...user,
         });
+        return c.redirect("/");
       } catch (err) {
         console.log(err);
+        return c.redirect("/");
       }
     }
     return c.redirect("/");

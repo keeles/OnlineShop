@@ -139,7 +139,7 @@ async function uploadToS3(file: File, presignedUrl: string) {
     },
     body: file,
   });
-
+  console.log(uploadResponse);
   if (!uploadResponse.ok) throw new Error("Server Error");
   return presignedUrl;
 }

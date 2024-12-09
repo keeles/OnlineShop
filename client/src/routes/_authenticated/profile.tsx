@@ -42,13 +42,12 @@ function Profile() {
         </div>
       </div>
 
-      {userProducts.data ? <HoverEffect items={userProducts.data} /> : <h1>No Listings</h1>}
+      {userProducts.data ? (
+        <HoverEffect items={userProducts.data.productsWithImages} profile={true} />
+      ) : (
+        <h1>No Listings</h1>
+      )}
 
-      <div className="mt-6 flex justify-center">
-        <Button className="">
-          <a href="/api/logout">Logout</a>
-        </Button>
-      </div>
       {isModalOpen && (
         <div className="mt-6 p-4 bg-background rounded-lg shadow-inner border border-foreground">
           <h2 className="text-2xl font-semibold mb-4">Edit Profile</h2>

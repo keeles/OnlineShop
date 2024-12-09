@@ -37,9 +37,3 @@ export async function getSignedUrl(fileName: string, fileType: string, fileSize:
   const data = await res.json();
   return data;
 }
-
-// export const getUrlQuery = queryOptions({
-//   queryKey: ["get-signed-url"],
-//   queryFn: getSignedUrl,
-//   staleTime: Infinity
-// })

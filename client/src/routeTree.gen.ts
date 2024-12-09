@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as ProductProductIdImport } from './routes/product.$productId'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCreateProductImport } from './routes/_authenticated/create-product'
 
@@ -26,6 +27,12 @@ const AuthenticatedRoute = AuthenticatedImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProductProductIdRoute = ProductProductIdImport.update({
+  id: '/product/$productId',
+  path: '/product/$productId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -75,6 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/product/$productId': {
+      id: '/product/$productId'
+      path: '/product/$productId'
+      fullPath: '/product/$productId'
+      preLoaderRoute: typeof ProductProductIdImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -99,6 +113,7 @@ export interface FileRoutesByFullPath {
   '': typeof AuthenticatedRouteWithChildren
   '/create-product': typeof AuthenticatedCreateProductRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/product/$productId': typeof ProductProductIdRoute
 }
 
 export interface FileRoutesByTo {
@@ -106,6 +121,7 @@ export interface FileRoutesByTo {
   '': typeof AuthenticatedRouteWithChildren
   '/create-product': typeof AuthenticatedCreateProductRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/product/$productId': typeof ProductProductIdRoute
 }
 
 export interface FileRoutesById {
@@ -114,30 +130,34 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/create-product': typeof AuthenticatedCreateProductRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/product/$productId': typeof ProductProductIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/create-product' | '/profile'
+  fullPaths: '/' | '' | '/create-product' | '/profile' | '/product/$productId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/create-product' | '/profile'
+  to: '/' | '' | '/create-product' | '/profile' | '/product/$productId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/create-product'
     | '/_authenticated/profile'
+    | '/product/$productId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  ProductProductIdRoute: typeof ProductProductIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  ProductProductIdRoute: ProductProductIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -151,7 +171,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/_authenticated"
+        "/_authenticated",
+        "/product/$productId"
       ]
     },
     "/": {
@@ -171,6 +192,9 @@ export const routeTree = rootRoute
     "/_authenticated/profile": {
       "filePath": "_authenticated/profile.tsx",
       "parent": "/_authenticated"
+    },
+    "/product/$productId": {
+      "filePath": "product.$productId.tsx"
     }
   }
 }

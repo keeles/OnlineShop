@@ -11,7 +11,7 @@ async function getAllProducts() {
   const res = await api.products.$get();
   if (!res.ok) throw new Error("Server Error");
   const data = await res.json();
-  return data.products;
+  return data.productsWithImages;
 }
 
 function Index() {
@@ -21,7 +21,9 @@ function Index() {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto px-8">{isPending ? <h1>Loading...</h1> : <HoverEffect items={data} />}</div>
+      <div className="max-w-5xl mx-auto px-8">
+        {isPending ? <h1>Loading...</h1> : <HoverEffect items={data} profile={false} />}
+      </div>
     </>
   );
 }

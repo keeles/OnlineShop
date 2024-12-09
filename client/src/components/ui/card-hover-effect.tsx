@@ -1,9 +1,13 @@
 import {cn} from "@/lib/utils";
 import {AnimatePresence, motion} from "framer-motion";
 import {useState} from "react";
+import {Button} from "./button";
+import {api} from "@/lib/api";
+import {useNavigate} from "@tanstack/react-router";
 
 export const HoverEffect = ({
   items,
+  profile,
   className,
 }: {
   items: {
@@ -11,16 +15,31 @@ export const HoverEffect = ({
     title: string;
     description: string;
     price: string;
+    userId: string;
+    createdAt: string | null;
+    images: {
+      id: number;
+      url: string;
+      name: string;
+      productId: number;
+    }[];
   }[];
+  profile: boolean;
   className?: string;
 }) => {
   let [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
+  const deleteListing = async (id: number) => {
+    const deleted = await api.products[":id{[0-9]+}"].$delete({param: {id: id.toString()}});
+    console.log(deleted);
+    if (!deleted.ok) alert("error deleting item");
+    const navigate = useNavigate();
+    navigate({to: "/profile"});
+  };
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2  lg:grid-cols-3  py-10", className)}>
       {items.map((item, idx) => (
         <a
-          href={`/api/product/${item?.id}`}
+          href={`/product/${item?.id}`}
           key={item?.id}
           className="relative group  block p-2 h-full w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
@@ -44,7 +63,28 @@ export const HoverEffect = ({
             )}
           </AnimatePresence>
           <Card>
+            {profile ? (
+              <Button
+                variant="ghost"
+                className="absolute top-0 right-0"
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteListing(item.id);
+                }}
+              >
+                X
+              </Button>
+            ) : (
+              ""
+            )}
             <CardTitle>{item.title}</CardTitle>
+            {item.images ? (
+              <CardDescription className="rounded-md overflow-hidden">
+                <img src={item.images[0]?.url} alt="" />
+              </CardDescription>
+            ) : (
+              ""
+            )}
             <CardDescription>{item.description}</CardDescription>
             <CardDescription>${item.price}</CardDescription>
           </Card>
