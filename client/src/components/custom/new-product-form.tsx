@@ -15,6 +15,12 @@ export default function NewProductForm() {
       title: "",
       description: "",
       price: "",
+      images: [
+        {
+          url: "",
+          fileName: "",
+        },
+      ],
     },
     onSubmit: async ({value}) => {
       const res = await api.products.$post({json: value});

@@ -17,7 +17,7 @@ async function getAllProducts() {
 function Index() {
   const {isPending, error, data} = useQuery({queryKey: ["get-all-products"], queryFn: getAllProducts});
 
-  if (error) return "An error has occurred: " + error.message;
+  if (error) return <div>An error has occurred: {error.message}</div>;
 
   return (
     <>

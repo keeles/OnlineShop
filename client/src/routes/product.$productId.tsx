@@ -1,21 +1,12 @@
+import {Button} from "@/components/ui/button";
 import {CardDescription, CardTitle} from "@/components/ui/card-hover-effect";
 import {api} from "@/lib/api";
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {createFileRoute} from "@tanstack/react-router";
 
 export const Route = createFileRoute("/product/$productId")({
   component: Product,
 });
-// const {productId} = Route.useParams();
-
-// async function getProductById(id: string) {
-//   const navigate = useNavigate();
-//   const res = await api.products[":id{[0-9]+}"].$get({param: {id}});
-//   if (!res.ok) navigate({to: "/"});
-//   const product = await res.json();
-//   console.log(product);
-//   return product;
-// }
 
 function Product() {
   const {productId} = Route.useParams();
@@ -27,6 +18,7 @@ function Product() {
         throw new Error("Server Error");
       }
       return (await res.json()) as {
+        id: number;
         title: string;
         description: string;
         price: string;
@@ -39,26 +31,44 @@ function Product() {
       };
     },
   });
+
+  const addToCart = useMutation({
+    mutationFn: async (productId: number) => {
+      return await api.cart[":id{[0-9]+}"].$post({param: {id: String(productId)}});
+    },
+  });
+
   if (isPending) return <div>Loading...</div>;
   if (error) return <div>Error loading product.</div>;
   if (!data) return <div>Product not found</div>;
-  console.log(data);
+
   return (
-    <div className="p-2 max-w-3xl gap-y-4 flex flex-col items-center justify-center border border-1 rounded-md w-full">
-      <CardTitle>{data.title}</CardTitle>
-      <div className="flex flex-col justify-between space-x-10">
+    <div className="p-2 max-w-4xl flex items-center justify-evenly border border-1 rounded-md w-full">
+      <div className="w-11/12 mx-4">
+        {data.images
+          ? data.images.map((i) => {
+              return (
+                <CardDescription className="rounded-md overflow-hidden mb-8" key={i.id}>
+                  <img src={i.url} alt="" className="" />
+                </CardDescription>
+              );
+            })
+          : ""}
+      </div>
+      <div className="space-y-5">
+        <CardTitle>{data.title}</CardTitle>
         <CardDescription>{data.description}</CardDescription>
         <CardDescription>${data.price}</CardDescription>
-        <div className="w-96 h-vh">
-          {data.images
-            ? data.images.map((i) => {
-                return (
-                  <CardDescription className="rounded-md overflow-hidden" key={i.id}>
-                    <img src={i.url} alt="" />
-                  </CardDescription>
-                );
-              })
-            : ""}
+        <div>
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              if (addToCart.isSuccess) return;
+              addToCart.mutate(data.id);
+            }}
+          >
+            {addToCart.isSuccess ? <>Added to cart</> : <>Add to Cart</>}
+          </Button>
         </div>
       </div>
     </div>

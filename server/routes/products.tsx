@@ -6,8 +6,8 @@ import {getUser} from "../kinde";
 import {db} from "../db";
 import {products as productsTable, insertProductSchema} from "../db/schema/products";
 import {and, desc, eq} from "drizzle-orm";
-import {createProductSchema, getImageUrlSchema, requestCreateProductSchema, productSchema} from "../sharedTypes";
-import {insertProductImageSchema, productImages as productImagesTable} from "../db/schema/product-images";
+import {getImageUrlSchema, requestCreateProductSchema} from "../sharedTypes";
+import {productImages as productImagesTable} from "../db/schema/product-images";
 
 const s3 = new S3Client({
   credentials: {
@@ -19,46 +19,53 @@ const s3 = new S3Client({
 
 export const productsRoute = new Hono()
   .get("/", async (c) => {
-    const products = await db
-      .select({products: productsTable, images: productImagesTable})
-      .from(productsTable)
-      .leftJoin(productImagesTable, eq(productsTable.id, productImagesTable.productId))
-      .orderBy(desc(productsTable.createdAt));
+    console.log("GET PRODUCTS");
+    const now = Date.now();
+    try {
+      const products = await db
+        .select({products: productsTable, images: productImagesTable})
+        .from(productsTable)
+        .leftJoin(productImagesTable, eq(productsTable.id, productImagesTable.productId))
+        .orderBy(desc(productsTable.createdAt));
+      console.log("products", Date.now() - now);
+      const productsWithImages = await Promise.all(
+        products.map(async (row) => {
+          const product = row.products;
+          const images = row.images ? [row.images] : [];
 
-    const productsWithImages = await Promise.all(
-      products.map(async (row) => {
-        const product = row.products;
-        const images = row.images ? [row.images] : [];
-
-        const imagesWithUrl = await Promise.all(
-          images.map(async (img) => {
-            const getObjectParams = {
-              Bucket: process.env.BUCKET_NAME!,
-              Key: img.name,
-            };
-            const command = new GetObjectCommand(getObjectParams);
-            const url = await getSignedUrl(s3, command);
-            return {
-              id: img.id,
-              name: img.name,
-              productId: img.productId,
-              url: url,
-            };
-          })
-        );
-        return {
-          id: product.id,
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          userId: product.userId,
-          createdAt: product.createdAt,
-          images: imagesWithUrl,
-        };
-      })
-    );
-
-    return c.json({productsWithImages});
+          const imagesWithUrl = await Promise.all(
+            images.map(async (img) => {
+              const getObjectParams = {
+                Bucket: process.env.BUCKET_NAME!,
+                Key: img.name,
+              };
+              const command = new GetObjectCommand(getObjectParams);
+              const url = await getSignedUrl(s3, command);
+              return {
+                id: img.id,
+                name: img.name,
+                productId: img.productId,
+                url: url,
+              };
+            })
+          );
+          return {
+            id: product.id,
+            title: product.title,
+            description: product.description,
+            price: product.price,
+            userId: product.userId,
+            createdAt: product.createdAt,
+            images: imagesWithUrl,
+          };
+        })
+      );
+      console.log("productsWithImages", Date.now() - now);
+      return c.json({productsWithImages});
+    } catch (err) {
+      console.log(err);
+      return c.json({}, 500);
+    }
   })
   .post("/", getUser, zValidator("json", requestCreateProductSchema), async (c) => {
     const product = c.req.valid("json");
@@ -97,74 +104,84 @@ export const productsRoute = new Hono()
   })
   .get("/:id{[0-9]+}", async (c) => {
     const id = Number.parseInt(c.req.param("id"));
-    const product = await db
-      .select()
-      .from(productsTable)
-      .where(eq(productsTable.id, id))
-      .then((res) => res[0]);
-    const productImages = await db.select().from(productImagesTable).where(eq(productImagesTable.productId, id));
-    const imageWithUrls = await Promise.all(
-      productImages.map(async (img) => {
-        const getObjectParams = {
-          Bucket: process.env.BUCKET_NAME!,
-          Key: img.name,
-        };
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(s3, command);
-        return {
-          id: img.id,
-          name: img.name,
-          productId: img.productId,
-          url: url,
-        };
-      })
-    );
-    if (!product) return c.notFound();
-    return c.json({...product, images: imageWithUrls});
+    try {
+      const product = await db
+        .select()
+        .from(productsTable)
+        .where(eq(productsTable.id, id))
+        .then((res) => res[0]);
+      const productImages = await db.select().from(productImagesTable).where(eq(productImagesTable.productId, id));
+      const imageWithUrls = await Promise.all(
+        productImages.map(async (img) => {
+          const getObjectParams = {
+            Bucket: process.env.BUCKET_NAME!,
+            Key: img.name,
+          };
+          const command = new GetObjectCommand(getObjectParams);
+          const url = await getSignedUrl(s3, command);
+          return {
+            id: img.id,
+            name: img.name,
+            productId: img.productId,
+            url: url,
+          };
+        })
+      );
+      if (!product) return c.notFound();
+      return c.json({...product, images: imageWithUrls});
+    } catch (err) {
+      console.log(err);
+      return c.json({}, 500);
+    }
   })
   .get("/user-products", getUser, async (c) => {
     const user = c.var.user;
-    const products = await db
-      .select({products: productsTable, images: productImagesTable})
-      .from(productsTable)
-      .where(eq(productsTable.userId, user.id))
-      .leftJoin(productImagesTable, eq(productsTable.id, productImagesTable.productId))
-      .orderBy(desc(productsTable.createdAt));
+    try {
+      const products = await db
+        .select({products: productsTable, images: productImagesTable})
+        .from(productsTable)
+        .where(eq(productsTable.userId, user.id))
+        .leftJoin(productImagesTable, eq(productsTable.id, productImagesTable.productId))
+        .orderBy(desc(productsTable.createdAt));
 
-    const productsWithImages = await Promise.all(
-      products.map(async (row) => {
-        const product = row.products;
-        const images = row.images ? [row.images] : [];
+      const productsWithImages = await Promise.all(
+        products.map(async (row) => {
+          const product = row.products;
+          const images = row.images ? [row.images] : [];
 
-        const imagesWithUrl = await Promise.all(
-          images.map(async (img) => {
-            const getObjectParams = {
-              Bucket: process.env.BUCKET_NAME!,
-              Key: img.name,
-            };
-            const command = new GetObjectCommand(getObjectParams);
-            const url = await getSignedUrl(s3, command);
-            return {
-              id: img.id,
-              name: img.name,
-              productId: img.productId,
-              url: url,
-            };
-          })
-        );
-        return {
-          id: product.id,
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          userId: product.userId,
-          createdAt: product.createdAt,
-          images: imagesWithUrl,
-        };
-      })
-    );
+          const imagesWithUrl = await Promise.all(
+            images.map(async (img) => {
+              const getObjectParams = {
+                Bucket: process.env.BUCKET_NAME!,
+                Key: img.name,
+              };
+              const command = new GetObjectCommand(getObjectParams);
+              const url = await getSignedUrl(s3, command);
+              return {
+                id: img.id,
+                name: img.name,
+                productId: img.productId,
+                url: url,
+              };
+            })
+          );
+          return {
+            id: product.id,
+            title: product.title,
+            description: product.description,
+            price: product.price,
+            userId: product.userId,
+            createdAt: product.createdAt,
+            images: imagesWithUrl,
+          };
+        })
+      );
 
-    return c.json({productsWithImages});
+      return c.json({productsWithImages});
+    } catch (err) {
+      console.log(err);
+      return c.json({}, 500);
+    }
   })
   .post("/get-presigned-url", getUser, zValidator("json", getImageUrlSchema), async (c) => {
     const body = c.req.valid("json");

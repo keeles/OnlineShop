@@ -37,3 +37,16 @@ export async function getSignedUrl(fileName: string, fileType: string, fileSize:
   const data = await res.json();
   return data;
 }
+
+async function getCartProducts() {
+  const res = await api.cart.$get();
+  if (!res.ok) throw new Error("Server Error");
+  const data = await res.json();
+  return data;
+}
+
+export const cartProductQuery = queryOptions({
+  queryKey: ["get-cart-products"],
+  queryFn: getCartProducts,
+  staleTime: Infinity,
+});
