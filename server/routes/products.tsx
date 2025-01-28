@@ -9,7 +9,7 @@ import {and, desc, eq} from "drizzle-orm";
 import {getImageUrlSchema, requestCreateProductSchema} from "../sharedTypes";
 import {productImages as productImagesTable} from "../db/schema/product-images";
 
-const s3 = new S3Client({
+export const s3 = new S3Client({
   credentials: {
     accessKeyId: process.env.ACCESS_KEY!,
     secretAccessKey: process.env.SECRET_ACCESS_KEY!,
@@ -19,15 +19,12 @@ const s3 = new S3Client({
 
 export const productsRoute = new Hono()
   .get("/", async (c) => {
-    console.log("GET PRODUCTS");
-    const now = Date.now();
     try {
       const products = await db
         .select({products: productsTable, images: productImagesTable})
         .from(productsTable)
         .leftJoin(productImagesTable, eq(productsTable.id, productImagesTable.productId))
         .orderBy(desc(productsTable.createdAt));
-      console.log("products", Date.now() - now);
       const productsWithImages = await Promise.all(
         products.map(async (row) => {
           const product = row.products;
@@ -60,7 +57,6 @@ export const productsRoute = new Hono()
           };
         })
       );
-      console.log("productsWithImages", Date.now() - now);
       return c.json({productsWithImages});
     } catch (err) {
       console.log(err);
